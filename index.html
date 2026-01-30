@@ -11,24 +11,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      margin: 0;
-      font-family: 'Noto Sans JP', sans-serif;
-      min-height: 100vh;
-      background-image: url("nangoku.jpg");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      color: #023047;
-    }
+   body {
+  margin: 0;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: #023047;
+}
 
-    .overlay {
-      min-height: 100vh;
-      background: rgba(255,255,255,0.55);
-      backdrop-filter: blur(4px);
-      text-align: center;
-      padding-bottom: 40px;
-    }
+.overlay {
+  min-height: 100vh;
+  background-image: url("nangoku.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  text-align: center;
+  padding-bottom: 40px;
+}
 
     h1 {
       margin-top: 40px;
@@ -47,7 +44,7 @@
     }
 
     button {
-      margin-top: 20px;
+      margin-top: 5px;
       padding: 18px 32px;
       font-size: 16px;
       font-family: 'Poppins', 'Noto Sans JP', sans-serif;
@@ -87,6 +84,22 @@
       text-align: left;
       font-size: 15px;
     }
+.accordion {
+  width: 100%;
+  background: #ffffff;  /* ← 透過やめる */
+  border: none;
+  font-size: 16px;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  color: #023047;
+  padding: 12px 0;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.history-body {
+  display: none;
+  margin-top: 10px;
+}
 
     ul {
       padding-left: 0;
@@ -96,6 +109,36 @@
     li {
       margin-bottom: 6px;
     }
+
+    section {
+  margin: 40px auto;
+  max-width: 320px;
+}
+
+section h2 {
+  font-size: 20px;
+  margin-bottom: 4px; /* ← ここを縮める */
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+
+.sub-action {
+  padding-top: 24px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.25);
+}
+
+.sub-action h2 {
+  font-size: 14px;
+  opacity: 0.75;
+}
+.sub-action select,
+.sub-action button {
+  width: 200px;
+}
+.sub-action button {
+  white-space: nowrap;
+}
   </style>
 </head>
 
@@ -106,19 +149,31 @@
 
   <div class="status" id="status"></div>
 
-  <button onclick="saveCurrent()">今月の3,000円<br>貯金した！</button>
+<section class="main-action">
+  <h2>💰 今月の貯金</h2>
+  <button onclick="saveCurrent()">今月の3,000円貯金した！</button>
+  <div class="message" id="currentMessage"></div>
+</section>
 
-  <div>
-    <select id="backMonth"></select><br>
-    <button onclick="saveBack()">この月にさかのぼって貯金</button>
-  </div>
+<section class="sub-action">
+  <h2>🗓️ さかのぼって貯金</h2>
+  <select id="backMonth"></select><br>
+  <button onclick="saveBack()">選択月を貯金</button>
+</section>
+
 
   <div class="message" id="message"></div>
 
-  <div class="history">
-    <h3>貯金履歴</h3>
+<div class="history">
+  <button class="accordion" onclick="toggleHistory()">
+    ▼ 貯金履歴を見る
+  </button>
+
+  <div id="historyBody" class="history-body">
     <ul id="list"></ul>
   </div>
+</div>
+
 
 </div>
 
@@ -128,49 +183,62 @@
   const statusEl = document.getElementById("status");
   const messageEl = document.getElementById("message");
   const backMonthEl = document.getElementById("backMonth");
+  const currentMessageEl = document.getElementById("currentMessage");
+
 
   function labelFromDate(d) {
     return d.getFullYear() + "年" + (d.getMonth() + 1) + "月";
   }
 
   function load() {
-    const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
-    data.sort();
-    listEl.innerHTML = "";
+  const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
 
-    data.forEach(d => {
-      const li = document.createElement("li");
-      li.textContent = "✅ " + d;
-      listEl.appendChild(li);
-    });
+  // 🌴 年月を「新しい順」にソート
+  data.sort((a, b) => {
+    const da = new Date(a.replace("年", "/").replace("月", "/1"));
+    const db = new Date(b.replace("年", "/").replace("月", "/1"));
+    return db - da;
+  });
 
-    const months = data.length;
-    const total = months * AMOUNT;
+  listEl.innerHTML = "";
 
-    statusEl.innerHTML =
-      `💰 累計貯金額：<strong>${total.toLocaleString()}円</strong><br>
-       📅 貯金した月数：<strong>${months}か月</strong>`;
+  data.forEach(d => {
+    const li = document.createElement("li");
+    li.textContent = "✅ " + d;
+    listEl.appendChild(li);
+  });
+
+  const months = data.length;
+  const total = months * AMOUNT;
+
+  statusEl.innerHTML =
+    `💰 累計貯金額：<strong>${total.toLocaleString()}円</strong><br>
+     📅 貯金した月数：<strong>${months}か月</strong>`;
+}
+
+
+function saveLabel(label, targetMessageEl) {
+  const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
+
+  if (data.includes(label)) {
+    targetMessageEl.textContent = "その月はもう貯金済みだよ 🌺";
+    return;
   }
 
-  function saveLabel(label) {
-    const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
-    if (data.includes(label)) {
-      messageEl.textContent = "その月はもう貯金済みだよ 🌺";
-      return;
-    }
-    data.push(label);
-    localStorage.setItem("nangokukai", JSON.stringify(data));
-    messageEl.textContent = "ナイス！南国に一歩近づいた 🌴✈️";
-    load();
-  }
+  data.push(label);
+  localStorage.setItem("nangokukai", JSON.stringify(data));
+  targetMessageEl.textContent = "ナイス！イタリアに一歩近づいた 🌴✈️";
+  load();
+}
 
-  function saveCurrent() {
-    saveLabel(labelFromDate(new Date()));
-  }
 
-  function saveBack() {
-    saveLabel(backMonthEl.value);
-  }
+function saveCurrent() {
+  saveLabel(labelFromDate(new Date()), currentMessageEl);
+}
+
+function saveBack() {
+  saveLabel(backMonthEl.value, messageEl);
+}
 
   function setupBackMonths() {
     const now = new Date();
@@ -185,6 +253,20 @@
 
   setupBackMonths();
   load();
+
+  function toggleHistory() {
+  const body = document.getElementById("historyBody");
+  const btn = document.querySelector(".accordion");
+
+  if (body.style.display === "block") {
+    body.style.display = "none";
+    btn.textContent = "▼ 貯金履歴を見る";
+  } else {
+    body.style.display = "block";
+    btn.textContent = "▲ 貯金履歴を閉じる";
+  }
+}
+
 </script>
 
 </body>
