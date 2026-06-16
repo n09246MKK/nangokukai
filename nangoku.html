@@ -11,27 +11,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      margin: 0;
-      font-family: 'Noto Sans JP', sans-serif;
-      min-height: 100vh;
-      background-image: url("nangoku.jpg");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      color: #023047;
-    }
+   body {
+  margin: 0;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: #023047;
+}
 
-    .overlay {
-      min-height: 100vh;
-      background: rgba(255,255,255,0.55);
-      backdrop-filter: blur(4px);
-      text-align: center;
-      padding-bottom: 40px;
-    }
+.overlay {
+  min-height: 100vh;
+  background-image: url("nangoku.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; 
+  text-align: center;
+  padding-bottom: 40px;
+}
 
     h1 {
-      margin-top: 40px;
+       margin: 0;
+      padding-top: 40px;
       font-family: 'Poppins', sans-serif;
       letter-spacing: 1px;
     }
@@ -47,7 +46,7 @@
     }
 
     button {
-      margin-top: 20px;
+      margin-top: 5px;
       padding: 18px 32px;
       font-size: 16px;
       font-family: 'Poppins', 'Noto Sans JP', sans-serif;
@@ -87,6 +86,36 @@
       text-align: left;
       font-size: 15px;
     }
+.accordion {
+  width: 100%;
+  background: #ffffff;  /* ← 透過やめる */
+  border: none;
+  font-size: 16px;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  color: #023047;
+  padding: 12px 0;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.history-body {
+  display: none;
+  margin-top: 10px;
+}
+/* 🌴 バックアップエリア */
+.backup-area {
+  margin: 30px auto;
+}
+
+.backup-area button {
+  width: 220px;
+  margin-top: 10px;
+}
+
+ul {
+  padding-left: 0;
+  list-style: none;
+}
 
     ul {
       padding-left: 0;
@@ -96,6 +125,66 @@
     li {
       margin-bottom: 6px;
     }
+
+    section {
+  margin: 40px auto;
+  max-width: 320px;
+}
+
+section h2 {
+  font-size: 20px;
+  margin-bottom: 4px; /* ← ここを縮める */
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+
+.sub-action {
+  padding-top: 24px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.25);
+}
+
+.sub-action h2 {
+  font-size: 14px;
+  opacity: 0.75;
+}
+.sub-action select,
+.sub-action button {
+  width: 200px;
+}
+.sub-action button {
+  white-space: nowrap;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background: white;
+  width: 85%;
+  max-width: 400px;
+  margin: 80px auto;
+  padding: 24px;
+  border-radius: 20px;
+  text-align: left;
+  color: #023047;
+}
+
+.close {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.help-btn {
+  width: 220px;
+  background: #219ebc;
+}
   </style>
 </head>
 
@@ -106,19 +195,76 @@
 
   <div class="status" id="status"></div>
 
-  <button onclick="saveCurrent()">今月の3,000円<br>貯金した！</button>
+<section class="main-action">
+  <h2>💰 今月の貯金</h2>
+  <button onclick="saveCurrent()">今月の3,000円貯金した！</button>
+  <div class="message" id="currentMessage"></div>
+</section>
 
-  <div>
-    <select id="backMonth"></select><br>
-    <button onclick="saveBack()">この月にさかのぼって貯金</button>
-  </div>
+<section class="sub-action">
+  <h2>🗓️ さかのぼって貯金</h2>
+  <select id="backMonth"></select><br>
+  <button onclick="saveBack()">選択月を貯金</button>
+</section>
+
 
   <div class="message" id="message"></div>
 
-  <div class="history">
-    <h3>貯金履歴</h3>
+<div class="history">
+  <button class="accordion" onclick="toggleHistory()">
+    ▼ 貯金履歴を見る
+  </button>
+
+  <div id="historyBody" class="history-body">
     <ul id="list"></ul>
   </div>
+</div>
+<button class="help-btn" onclick="openModal()">
+  ❓ バックアップについて
+</button>
+
+<div id="helpModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+
+    <h2>🌴 バックアップ機能について</h2>
+
+    <p>
+      このアプリのデータは端末内に保存されています。
+    </p>
+
+    <h3>📤 バックアップ保存</h3>
+    <p>
+      現在の貯金履歴をダウンロードして保存します。<br>
+      機種変更前や定期的な保存がおすすめだよ。<br>
+      nangokukai_yyyy-mm-dd.jsonってファイルがダウンロードされるから保存しといてね
+    </p>
+
+    <h3>📥 データ復元</h3>
+    <p>
+      保存したバックアップファイルを読み込みます。<br>
+      nangokukai_yyyy-mm-dd.jsonってファイルをインポートしてね。<br>
+      現在のデータは上書きされるからね！
+    </p>
+
+    <p>
+      💡おすすめ：バックアップファイルはGoogle Driveなどにも保存しておきましょう。
+    </p>
+  </div>
+</div>
+
+<!-- 🌴 バックアップ機能 -->
+<div class="backup-area">
+  <button onclick="exportData()">📤 バックアップ保存</button><br>
+  <button onclick="importData()">📥 データ復元</button>
+
+  <input
+    type="file"
+    id="fileInput"
+    accept=".json"
+    style="display:none;"
+  >
+</div>
 
 </div>
 
@@ -128,49 +274,62 @@
   const statusEl = document.getElementById("status");
   const messageEl = document.getElementById("message");
   const backMonthEl = document.getElementById("backMonth");
+  const currentMessageEl = document.getElementById("currentMessage");
+
 
   function labelFromDate(d) {
     return d.getFullYear() + "年" + (d.getMonth() + 1) + "月";
   }
 
   function load() {
-    const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
-    data.sort();
-    listEl.innerHTML = "";
+  const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
 
-    data.forEach(d => {
-      const li = document.createElement("li");
-      li.textContent = "✅ " + d;
-      listEl.appendChild(li);
-    });
+  // 🌴 年月を「新しい順」にソート
+  data.sort((a, b) => {
+    const da = new Date(a.replace("年", "/").replace("月", "/1"));
+    const db = new Date(b.replace("年", "/").replace("月", "/1"));
+    return db - da;
+  });
 
-    const months = data.length;
-    const total = months * AMOUNT;
+  listEl.innerHTML = "";
 
-    statusEl.innerHTML =
-      `💰 累計貯金額：<strong>${total.toLocaleString()}円</strong><br>
-       📅 貯金した月数：<strong>${months}か月</strong>`;
+  data.forEach(d => {
+    const li = document.createElement("li");
+    li.textContent = "✅ " + d;
+    listEl.appendChild(li);
+  });
+
+  const months = data.length;
+  const total = months * AMOUNT;
+
+  statusEl.innerHTML =
+    `💰 累計貯金額：<strong>${total.toLocaleString()}円</strong><br>
+     📅 貯金した月数：<strong>${months}か月</strong>`;
+}
+
+
+function saveLabel(label, targetMessageEl) {
+  const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
+
+  if (data.includes(label)) {
+    targetMessageEl.textContent = "その月はもう貯金済みだよ 🌺";
+    return;
   }
 
-  function saveLabel(label) {
-    const data = JSON.parse(localStorage.getItem("nangokukai")) || [];
-    if (data.includes(label)) {
-      messageEl.textContent = "その月はもう貯金済みだよ 🌺";
-      return;
-    }
-    data.push(label);
-    localStorage.setItem("nangokukai", JSON.stringify(data));
-    messageEl.textContent = "ナイス！南国に一歩近づいた 🌴✈️";
-    load();
-  }
+  data.push(label);
+  localStorage.setItem("nangokukai", JSON.stringify(data));
+  targetMessageEl.textContent = "ナイス！イタリアに一歩近づいた 🌴✈️";
+  load();
+}
 
-  function saveCurrent() {
-    saveLabel(labelFromDate(new Date()));
-  }
 
-  function saveBack() {
-    saveLabel(backMonthEl.value);
-  }
+function saveCurrent() {
+  saveLabel(labelFromDate(new Date()), currentMessageEl);
+}
+
+function saveBack() {
+  saveLabel(backMonthEl.value, messageEl);
+}
 
   function setupBackMonths() {
     const now = new Date();
@@ -185,7 +344,86 @@
 
   setupBackMonths();
   load();
+
+  function toggleHistory() {
+  const body = document.getElementById("historyBody");
+  const btn = document.querySelector(".accordion");
+
+  if (body.style.display === "block") {
+    body.style.display = "none";
+    btn.textContent = "▼ 貯金履歴を見る";
+  } else {
+    body.style.display = "block";
+    btn.textContent = "▲ 貯金履歴を閉じる";
+  }
+}
+
+function exportData() {
+  const data = localStorage.getItem("nangokukai");
+
+  if (!data) {
+    alert("保存データがありません");
+    return;
+  }
+
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+
+  const today = new Date();
+  const dateStr =
+    today.getFullYear() + "-" +
+    String(today.getMonth() + 1).padStart(2, "0") + "-" +
+    String(today.getDate()).padStart(2, "0");
+
+  a.download = `nangokukai_${dateStr}.json`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+function importData() {
+  document.getElementById("fileInput").click();
+}
+
+document.getElementById("fileInput").addEventListener("change", function(event) {
+  const file = event.target.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      localStorage.setItem("nangokukai", JSON.stringify(data));
+
+      alert("復元しました 🌴✨");
+
+      load();
+    } catch (error) {
+      alert("ファイル形式が正しくありません");
+    }
+  };
+
+  reader.readAsText(file);
+});
+
+function openModal() {
+  document.getElementById("helpModal").style.display = "block";
+}
+
+function closeModal() {
+  document.getElementById("helpModal").style.display = "none";
+}
 </script>
+
+
 
 </body>
 </html>
